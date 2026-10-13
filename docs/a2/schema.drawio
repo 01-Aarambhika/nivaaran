@@ -1,0 +1,122 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="24.8.6">
+  <diagram id="nivaaran-er-schema" name="Database Schema">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1650" pageHeight="1150" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title (No Assignment 2, No Subheading) -->
+        <mxCell id="title" value="Nivaaran: Database Entity-Relationship Diagram" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=18;fontStyle=1;fontFamily=Helvetica;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="600" y="25" width="450" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ================= GROUP 1: ACCOUNTS DB ================= -->
+        <mxCell id="grp_accounts" value="Accounts Service DB (nivaaran_accounts)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#6c8ebf;strokeWidth=2;dashed=1;fontStyle=1;fontSize=12;fontColor=#333333;startSize=26;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="340" height="470" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_users" value="users&#xa;---------------------------------------&#xa;PK  user_id : varchar(64)&#xa;    full_name : varchar(120)&#xa;    email : varchar(120) [UQ]&#xa;    role : varchar(32)&#xa;    department_scope : varchar(32)&#xa;    password_hash : varchar(255)&#xa;    is_active : boolean&#xa;    created_at : timestamp&#xa;    updated_at : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=24;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=8;spacingRight=8;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_accounts">
+          <mxGeometry x="20" y="40" width="300" height="200" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_user_sessions" value="user_sessions&#xa;---------------------------------------&#xa;PK  session_id : varchar(64)&#xa;FK  user_id : varchar(64)&#xa;    token_hash : varchar(255)&#xa;    user_role : varchar(32)&#xa;    ip_address : varchar(45)&#xa;    expires_at : timestamp&#xa;    created_at : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=24;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=8;spacingRight=8;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_accounts">
+          <mxGeometry x="20" y="270" width="300" height="170" as="geometry" />
+        </mxCell>
+
+        <mxCell id="rel_users_sessions" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#6c8ebf;strokeWidth=2;fontSize=11;fontFamily=Helvetica;fontStyle=1;" edge="1" parent="grp_accounts" source="tbl_users" target="tbl_user_sessions">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ================= GROUP 2: DIRECTORY DB ================= -->
+        <mxCell id="grp_directory" value="Directory Service DB (nivaaran_directory)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#82b366;strokeWidth=2;dashed=1;fontStyle=1;fontSize=12;fontColor=#333333;startSize=26;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="40" y="580" width="340" height="440" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_categories" value="categories&#xa;---------------------------------------&#xa;PK  category_id : varchar(32)&#xa;    display_name : varchar(80)&#xa;    description : text&#xa;    default_sla_hours : int&#xa;    urgent_sla_hours : int&#xa;    escalation_tier : varchar(32)&#xa;    is_active : boolean&#xa;    created_at : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=24;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=8;spacingRight=8;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_directory">
+          <mxGeometry x="20" y="40" width="300" height="180" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_locations" value="locations&#xa;---------------------------------------&#xa;PK  location_id : varchar(64)&#xa;FK  category_id : varchar(32)&#xa;    zone_name : varchar(80)&#xa;    landmark : varchar(120)&#xa;    is_active : boolean&#xa;    created_at : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=24;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=8;spacingRight=8;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_directory">
+          <mxGeometry x="20" y="250" width="300" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="rel_categories_locations" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#82b366;strokeWidth=2;fontSize=11;fontFamily=Helvetica;fontStyle=1;" edge="1" parent="grp_directory" source="tbl_categories" target="tbl_locations">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ================= GROUP 3: COMPLAINTS DB (CENTRAL) ================= -->
+        <mxCell id="grp_complaints" value="Complaints Service DB (nivaaran_complaints) - Central" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#d79b00;strokeWidth=2;dashed=1;fontStyle=1;fontSize=12;fontColor=#333333;startSize=26;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="420" y="80" width="760" height="940" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_complaints" value="complaints (Central Entity)&#xa;--------------------------------------------------------------------------&#xa;PK  complaint_id : varchar(64)&#xa;    tracking_number : varchar(32) [UQ]&#xa;    reporter_user_id : varchar(64)  -- logical ref: users&#xa;    is_anonymous : boolean&#xa;    category_id : varchar(32)       -- logical ref: categories&#xa;    location_id : varchar(64)       -- logical ref: locations&#xa;    title : varchar(200)&#xa;    description : text&#xa;    priority : varchar(16) ('normal', 'urgent')&#xa;    current_status : varchar(32) ('submitted', 'assigned', ...)&#xa;    sla_deadline : timestamp&#xa;    is_escalated : boolean&#xa;    idempotency_key : varchar(128) [UQ]&#xa;    etag : varchar(64)&#xa;    created_at : timestamp&#xa;    updated_at : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=26;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=10;spacingRight=10;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_complaints">
+          <mxGeometry x="40" y="40" width="680" height="300" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_history" value="complaint_status_history&#xa;----------------------------------------------------&#xa;PK  history_id : varchar(64)&#xa;FK  complaint_id : varchar(64)&#xa;    from_status : varchar(32)&#xa;    to_status : varchar(32)&#xa;    changed_by_user_id : varchar(64)&#xa;    actor_role : varchar(32)&#xa;    remarks : text&#xa;    changed_at : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=24;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=8;spacingRight=8;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_complaints">
+          <mxGeometry x="40" y="380" width="320" height="200" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_comments" value="complaint_comments&#xa;----------------------------------------------------&#xa;PK  comment_id : varchar(64)&#xa;FK  complaint_id : varchar(64)&#xa;    author_user_id : varchar(64)&#xa;    author_role : varchar(32)&#xa;    message : text&#xa;    is_internal : boolean&#xa;    created_at : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=24;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=8;spacingRight=8;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_complaints">
+          <mxGeometry x="400" y="380" width="320" height="190" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_feedback" value="complaint_feedback&#xa;----------------------------------------------------&#xa;PK  feedback_id : varchar(64)&#xa;FK  complaint_id : varchar(64) [UQ]&#xa;    student_user_id : varchar(64)&#xa;    rating : int (1 to 5)&#xa;    comments : text&#xa;    is_reopened : boolean&#xa;    reopen_reason : text&#xa;    created_at : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=24;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=8;spacingRight=8;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_complaints">
+          <mxGeometry x="210" y="620" width="340" height="200" as="geometry" />
+        </mxCell>
+
+        <mxCell id="rel_cmp_hist" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#d79b00;strokeWidth=2;fontSize=11;fontFamily=Helvetica;fontStyle=1;" edge="1" parent="grp_complaints" source="tbl_complaints" target="tbl_history">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="rel_cmp_comm" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#d79b00;strokeWidth=2;fontSize=11;fontFamily=Helvetica;fontStyle=1;" edge="1" parent="grp_complaints" source="tbl_complaints" target="tbl_comments">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="rel_cmp_feed" value="1 : 1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#d79b00;strokeWidth=2;fontSize=11;fontFamily=Helvetica;fontStyle=1;" edge="1" parent="grp_complaints" source="tbl_complaints" target="tbl_feedback">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ================= GROUP 4: RESOLUTION DB ================= -->
+        <mxCell id="grp_resolution" value="Resolution Service DB (nivaaran_resolution)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#9673a6;strokeWidth=2;dashed=1;fontStyle=1;fontSize=12;fontColor=#333333;startSize=26;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="80" width="380" height="470" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_assignments" value="staff_assignments&#xa;---------------------------------------------&#xa;PK  assignment_id : varchar(64)&#xa;    complaint_id : varchar(64) [UQ]&#xa;    assigned_staff_id : varchar(64)&#xa;    assigned_by_user_id : varchar(64)&#xa;    department_scope : varchar(32)&#xa;    assignment_status : varchar(32)&#xa;    assigned_at : timestamp&#xa;    resolved_at : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=24;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=8;spacingRight=8;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_resolution">
+          <mxGeometry x="25" y="40" width="330" height="190" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_duty_roster" value="staff_duty_roster&#xa;---------------------------------------------&#xa;PK  roster_id : varchar(64)&#xa;    staff_user_id : varchar(64)&#xa;    department_scope : varchar(32)&#xa;    shift_date : date&#xa;    shift_start : time&#xa;    shift_end : time&#xa;    is_on_duty : boolean&#xa;    active_complaints_count : int&#xa;    created_at : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=24;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=8;spacingRight=8;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_resolution">
+          <mxGeometry x="25" y="250" width="330" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- ================= GROUP 5: NOTIFICATIONS DB ================= -->
+        <mxCell id="grp_notifications" value="Notifications Service DB (nivaaran_notifications)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#b85450;strokeWidth=2;dashed=1;fontStyle=1;fontSize=12;fontColor=#333333;startSize=26;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="580" width="380" height="440" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_notifications" value="notifications_log&#xa;---------------------------------------------&#xa;PK  notification_id : varchar(64)&#xa;    recipient_user_id : varchar(64)&#xa;    recipient_contact : varchar(120)&#xa;    channel : varchar(16) ('sms', 'email')&#xa;    event_type : varchar(48)&#xa;    related_complaint_id : varchar(64)&#xa;    title : varchar(160)&#xa;    body : text&#xa;    delivery_status : varchar(24)&#xa;    external_provider_id : varchar(100)&#xa;    sent_at : timestamp&#xa;    created_at : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=24;fillColor=#f8cecc;strokeColor=#b85450;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=8;spacingRight=8;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_notifications">
+          <mxGeometry x="25" y="40" width="330" height="260" as="geometry" />
+        </mxCell>
+
+        <!-- ================= GROUP 6: ANALYTICS & AUDIT DB ================= -->
+        <mxCell id="grp_analytics" value="Analytics &amp; Audit Service DB (nivaaran_analytics)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#d6b656;strokeWidth=2;dashed=1;fontStyle=1;fontSize=12;fontColor=#333333;startSize=26;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1640" y="80" width="380" height="940" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_audit_events" value="audit_events_log&#xa;---------------------------------------------&#xa;PK  event_id : varchar(64)&#xa;    event_type : varchar(64)&#xa;    entity_type : varchar(32)&#xa;    entity_id : varchar(64)&#xa;    actor_user_id : varchar(64)&#xa;    actor_role : varchar(32)&#xa;    origin_service : varchar(32)&#xa;    previous_state : varchar(64)&#xa;    new_state : varchar(64)&#xa;    payload_snapshot : text&#xa;    client_ip : varchar(45)&#xa;    event_timestamp : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=24;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=8;spacingRight=8;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_analytics">
+          <mxGeometry x="25" y="40" width="330" height="280" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_sla_snapshots" value="sla_performance_snapshots&#xa;---------------------------------------------&#xa;PK  snapshot_id : varchar(64)&#xa;    category_id : varchar(32)&#xa;    snapshot_date : date&#xa;    total_filed : int&#xa;    total_resolved : int&#xa;    resolved_within_sla : int&#xa;    breached_sla_count : int&#xa;    average_resolution_hours : decimal&#xa;    compliance_rate_pct : decimal&#xa;    calculated_at : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=24;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=8;spacingRight=8;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_analytics">
+          <mxGeometry x="25" y="350" width="330" height="250" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tbl_escalation_reports" value="escalation_incident_reports&#xa;---------------------------------------------&#xa;PK  report_id : varchar(64)&#xa;    complaint_id : varchar(64)&#xa;    category_id : varchar(32)&#xa;    initiator_user_id : varchar(64)&#xa;    breach_hours_exceeded : decimal&#xa;    escalation_tier : varchar(32)&#xa;    reason : text&#xa;    is_resolved : boolean&#xa;    reported_at : timestamp" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;startSize=24;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontFamily=Helvetica;fontSize=11;spacingLeft=8;spacingRight=8;spacingTop=4;whiteSpace=pre;" vertex="1" parent="grp_analytics">
+          <mxGeometry x="25" y="630" width="330" height="240" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

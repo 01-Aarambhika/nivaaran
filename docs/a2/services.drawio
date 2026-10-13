@@ -1,0 +1,102 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="24.8.6">
+  <diagram id="nivaaran-services" name="Service Architecture">
+    <mxGraphModel dx="1420" dy="860" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1350" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title (Clean, No Assignment 2, No Subheading) -->
+        <mxCell id="svc_title" value="Nivaaran: Service Architecture and Boundaries" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=18;fontStyle=1;fontFamily=Helvetica;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="400" y="25" width="550" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Client Box -->
+        <mxCell id="client_box" value="React Client&#xa;(Web Frontend)&#xa;[Ritik &amp; Abhishek]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontFamily=Helvetica;fontSize=13;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="40" y="300" width="160" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Service 1: Accounts -->
+        <mxCell id="box_accounts" value="Accounts Service&#xa;[Aarambhika - 20251651001]&#xa;---------------------------------------&#xa;Owns: users, credentials, roles&#xa;Database: nivaaran_accounts&#xa;Port: 8080 (REST / JSON)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontFamily=Helvetica;fontSize=12;fontColor=#000000;align=center;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="280" y="120" width="260" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Service 2: Directory -->
+        <mxCell id="box_directory" value="Directory Service&#xa;[Aarambhika - 20251651001]&#xa;---------------------------------------&#xa;Owns: categories, locations, SLAs&#xa;Database: nivaaran_directory&#xa;Port: 8081 (REST / JSON)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontFamily=Helvetica;fontSize=12;fontColor=#000000;align=center;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="720" y="120" width="260" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Service 3: Complaints (Central) -->
+        <mxCell id="box_complaints" value="Complaints Service (Central)&#xa;[Abhishek &amp; Ritik]&#xa;--------------------------------------------------&#xa;Owns: complaints, history, comments, feedback&#xa;Database: nivaaran_complaints&#xa;Port: 8082 (REST / Idempotent)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;fontStyle=1;fontFamily=Helvetica;fontSize=13;fontColor=#000000;align=center;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="270" y="360" width="300" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- Service 4: Resolution -->
+        <mxCell id="box_resolution" value="Resolution Service&#xa;[Abhishek - 20251651006]&#xa;---------------------------------------&#xa;Owns: staff duties, assignments&#xa;Database: nivaaran_resolution&#xa;Port: 8083 (REST / JSON)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontFamily=Helvetica;fontSize=12;fontColor=#000000;align=center;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="720" y="360" width="260" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- Service 5: Notifications -->
+        <mxCell id="box_notifications" value="Notifications Service&#xa;[Ritik - 20251651078]&#xa;---------------------------------------&#xa;Owns: message logs, SMS receipts&#xa;Database: nivaaran_notifications&#xa;Port: 8084 (Async / REST)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontFamily=Helvetica;fontSize=12;fontColor=#000000;align=center;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="320" y="600" width="280" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Service 6: Analytics & SLA -->
+        <mxCell id="box_analytics" value="Analytics &amp; SLA Service&#xa;[Shared Telemetry]&#xa;---------------------------------------&#xa;Owns: audit trails, SLA compliance, KPIs&#xa;Database: nivaaran_analytics&#xa;Port: 8085 (REST / Telemetry)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontFamily=Helvetica;fontSize=12;fontColor=#000000;align=center;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="720" y="600" width="280" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Edges / Operations -->
+        <mxCell id="e_client_auth" value="POST /sessions&#xa;POST /users" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;entryX=0;entryY=0.5;strokeColor=#6c8ebf;strokeWidth=1.5;fontSize=10;fontFamily=Helvetica;" edge="1" parent="1" source="client_box" target="box_accounts">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="120" y="185" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_client_cmp" value="fileComplaint(...)&#xa;getComplaint, rate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;entryX=0;entryY=0.5;strokeColor=#d79b00;strokeWidth=2;fontSize=10;fontFamily=Helvetica;" edge="1" parent="1" source="client_box" target="box_complaints">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_cmp_acc" value="validateUser(userId)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.4;exitY=0;entryX=0.4;entryY=1;strokeColor=#6c8ebf;strokeWidth=1.5;fontSize=10;fontFamily=Helvetica;" edge="1" parent="1" source="box_complaints" target="box_accounts">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_cmp_dir" value="getCategorySLA(catId)&#xa;verifyLocation(locId)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.85;exitY=0;entryX=0.2;entryY=1;strokeColor=#82b366;strokeWidth=1.5;fontSize=10;fontFamily=Helvetica;" edge="1" parent="1" source="box_complaints" target="box_directory">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="525" y="300" /><mxPoint x="772" y="300" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_cmp_res" value="assignStaff(complaintId, catId, locId)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.4;entryX=0;entryY=0.4;strokeColor=#9673a6;strokeWidth=1.5;fontSize=10;fontFamily=Helvetica;" edge="1" parent="1" source="box_complaints" target="box_resolution">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_cmp_notif" value="sendAlert(userId, 'filed')" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.4;exitY=1;entryX=0.5;entryY=0;strokeColor=#b85450;strokeWidth=1.5;fontSize=10;fontFamily=Helvetica;" edge="1" parent="1" source="box_complaints" target="box_notifications">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_cmp_analytics" value="emitAuditEvent(event)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.8;exitY=1;entryX=0.2;entryY=0;strokeColor=#d6b656;strokeWidth=1.5;fontSize=10;fontFamily=Helvetica;" edge="1" parent="1" source="box_complaints" target="box_analytics">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="510" y="550" /><mxPoint x="776" y="550" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_res_acc" value="getStaffByRole(role, cat)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.2;exitY=0;entryX=0.9;entryY=1;strokeColor=#6c8ebf;strokeWidth=1;dashed=1;fontSize=10;fontFamily=Helvetica;" edge="1" parent="1" source="box_resolution" target="box_accounts">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="772" y="310" /><mxPoint x="514" y="310" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_res_notif" value="sendAlert(staffId, 'task')" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.3;exitY=1;entryX=0.8;entryY=0;strokeColor=#b85450;strokeWidth=1;dashed=1;fontSize=10;fontFamily=Helvetica;" edge="1" parent="1" source="box_resolution" target="box_notifications">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="798" y="550" /><mxPoint x="544" y="550" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="e_res_analytics" value="logAssignmentSLA(id)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.65;exitY=1;entryX=0.65;entryY=0;strokeColor=#d6b656;strokeWidth=1;dashed=1;fontSize=10;fontFamily=Helvetica;" edge="1" parent="1" source="box_resolution" target="box_analytics">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
