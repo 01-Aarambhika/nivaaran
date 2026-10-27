@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope 
+    xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:sms="urn:nivaaran:telecom:sms">
+
+    <soap:Body>
+        <soap:Fault>
+            <faultcode>soap:Client</faultcode>
+            <faultstring>Invalid Recipient Mobile Number</faultstring>
+            <detail>
+                <sms:smsFaultDetail>
+                    <sms:errorCode>INVALID_MSISDN</sms:errorCode>
+                    <sms:detailMessage>The mobile destination +910000000000 failed telecom prefix validation and routing directory lookup.</sms:detailMessage>
+                </sms:smsFaultDetail>
+            </detail>
+        </soap:Fault>
+    </soap:Body>
+
+</soap:Envelope>

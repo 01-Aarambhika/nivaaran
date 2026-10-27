@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope 
+    xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:sms="urn:nivaaran:telecom:sms"
+    xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+    xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+    
+    <soap:Header>
+        <wsse:Security soap:mustUnderstand="1">
+            <wsse:UsernameToken wsu:Id="UsernameToken-NivaaranGateway">
+                <wsse:Username>nivaaran_notifications_client</wsse:Username>
+                <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest">
+                    dGhpcy1pcy1hLXNlY3VyZS1wYXNzd29yZC1kaWdlc3Q=
+                </wsse:Password>
+                <wsse:Nonce EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary">
+                    c29tZXJhbmRvbW5vbmNlMQ==
+                </wsse:Nonce>
+                <wsu:Created>2026-10-12T16:00:00Z</wsu:Created>
+            </wsse:UsernameToken>
+        </wsse:Security>
+    </soap:Header>
+
+    <soap:Body>
+        <sms:sendSMSRequest>
+            <sms:recipientNumber>+919876543210</sms:recipientNumber>
+            <sms:senderId>NIVAARAN</sms:senderId>
+            <sms:messageText>Your grievance CMP-2026-1042 (Hostel Block A tap leakage) has been assigned to Maintenance Staff.</sms:messageText>
+            <sms:priority>HIGH</sms:priority>
+        </sms:sendSMSRequest>
+    </soap:Body>
+
+</soap:Envelope>

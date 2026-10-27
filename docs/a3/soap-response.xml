@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope 
+    xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:sms="urn:nivaaran:telecom:sms">
+
+    <soap:Body>
+        <sms:sendSMSResponse>
+            <sms:messageId>SMS-2026-9812401</sms:messageId>
+            <sms:deliveryStatus>QUEUED_FOR_DISPATCH</sms:deliveryStatus>
+            <sms:dispatchedAt>2026-10-12T16:00:01Z</sms:dispatchedAt>
+        </sms:sendSMSResponse>
+    </soap:Body>
+
+</soap:Envelope>

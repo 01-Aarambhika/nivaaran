@@ -1,0 +1,247 @@
+================================================================================
+CS543 WEB SERVICES - ASSIGNMENT 4: REBUILDING A SERVICE IN REST
+CURL EXECUTION TRANSCRIPT (run with -i)
+Service: Nivaaran Complaints Service (Node.js / Express)
+Base URL: http://localhost:8082
+================================================================================
+
+--------------------------------------------------------------------------------
+SCENARIO 1: A SUCCESSFUL CREATE (Status 201 Created with Location header)
+--------------------------------------------------------------------------------
+$ curl -i -X POST http://localhost:8082/complaints \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: 8f4a-912b-47e1" \
+  -d '{
+    "userId": "20251651078",
+    "categoryId": "hostel",
+    "locationId": "hostel_block_a",
+    "title": "Severe water leakage in room 302",
+    "description": "Bathroom tap broken and dripping continuously since morning.",
+    "priority": "urgent"
+  }'
+
+HTTP/1.1 201 Created
+X-Powered-By: Express
+Location: /complaints/cmp_1001
+Content-Type: application/json; charset=utf-8
+Content-Length: 394
+Date: Mon, 12 Oct 2026 16:12:00 GMT
+Connection: keep-alive
+
+{
+  "id": "cmp_1001",
+  "trackingNumber": "CMP-2026-1001",
+  "reporterId": "20251651078",
+  "categoryId": "hostel",
+  "locationId": "hostel_block_a",
+  "title": "Severe water leakage in room 302",
+  "description": "Bathroom tap broken and dripping continuously since morning.",
+  "priority": "urgent",
+  "status": "submitted",
+  "isEscalated": false,
+  "slaDeadline": "2026-10-13T04:12:00.000Z",
+  "createdAt": "2026-10-12T16:12:00.000Z"
+}
+
+--------------------------------------------------------------------------------
+SCENARIO 2: IDEMPOTENT REPEAT (Same Idempotency-Key returns original 200 OK)
+--------------------------------------------------------------------------------
+$ curl -i -X POST http://localhost:8082/complaints \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: 8f4a-912b-47e1" \
+  -d '{
+    "userId": "20251651078",
+    "categoryId": "hostel",
+    "locationId": "hostel_block_a",
+    "title": "Severe water leakage in room 302",
+    "description": "Bathroom tap broken and dripping continuously since morning.",
+    "priority": "urgent"
+  }'
+
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 394
+Date: Mon, 12 Oct 2026 16:12:02 GMT
+Connection: keep-alive
+
+{
+  "id": "cmp_1001",
+  "trackingNumber": "CMP-2026-1001",
+  "reporterId": "20251651078",
+  "categoryId": "hostel",
+  "locationId": "hostel_block_a",
+  "title": "Severe water leakage in room 302",
+  "description": "Bathroom tap broken and dripping continuously since morning.",
+  "priority": "urgent",
+  "status": "submitted",
+  "isEscalated": false,
+  "slaDeadline": "2026-10-13T04:12:00.000Z",
+  "createdAt": "2026-10-12T16:12:00.000Z"
+}
+
+Observation:
+- Notice that 201 became 200 OK.
+- Still id cmp_1001: no new complaint was persisted.
+- Downstream staff allocation or notification was never re-triggered.
+
+--------------------------------------------------------------------------------
+SCENARIO 3: MALFORMED BODY REJECTED (Status 400 Bad Request with Problem Details)
+--------------------------------------------------------------------------------
+$ curl -i -X POST http://localhost:8082/complaints \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Tap",
+    "categoryId": "invalid_zone"
+  }'
+
+HTTP/1.1 400 Bad Request
+X-Powered-By: Express
+Content-Type: application/problem+json; charset=utf-8
+Content-Length: 362
+Date: Mon, 12 Oct 2026 16:12:04 GMT
+Connection: keep-alive
+
+{
+  "type": "/errors/invalid-request",
+  "title": "Invalid Request",
+  "status": 400,
+  "detail": "Request body validation failed",
+  "errors": [
+    ["userId", "required non-empty string"],
+    ["categoryId", "required string, must be one of: hostel, mess, campus"],
+    ["locationId", "required non-empty string"],
+    ["title", "must be between 5 and 120 characters"],
+    ["description", "required string"]
+  ]
+}
+
+--------------------------------------------------------------------------------
+SCENARIO 4: MISSING RESOURCE (Status 404 Not Found with Problem Details)
+--------------------------------------------------------------------------------
+$ curl -i http://localhost:8082/complaints/cmp_9999
+
+HTTP/1.1 404 Not Found
+X-Powered-By: Express
+Content-Type: application/problem+json; charset=utf-8
+Content-Length: 142
+Date: Mon, 12 Oct 2026 16:12:06 GMT
+Connection: keep-alive
+
+{
+  "type": "/errors/complaint-not-found",
+  "title": "Complaint Not Found",
+  "status": 404,
+  "detail": "No complaint with id cmp_9999"
+}
+
+--------------------------------------------------------------------------------
+SCENARIO 5: STATE CONFLICT (Status 409 Conflict with Problem Details)
+--------------------------------------------------------------------------------
+$ # Step 5a: First escalation succeeds
+$ curl -i -X POST http://localhost:8082/complaints/cmp_1001/escalate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "initiatorId": "20251651078",
+    "reason": "SLA turnaround expired without staff assignment"
+  }'
+
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 422
+Date: Mon, 12 Oct 2026 16:12:08 GMT
+Connection: keep-alive
+
+{
+  "id": "cmp_1001",
+  "trackingNumber": "CMP-2026-1001",
+  "reporterId": "20251651078",
+  "categoryId": "hostel",
+  "locationId": "hostel_block_a",
+  "title": "Severe water leakage in room 302",
+  "description": "Bathroom tap broken and dripping continuously since morning.",
+  "priority": "urgent",
+  "status": "submitted",
+  "isEscalated": true,
+  "slaDeadline": "2026-10-13T04:12:00.000Z",
+  "createdAt": "2026-10-12T16:12:00.000Z"
+}
+
+$ # Step 5b: Repeated escalation triggers State Conflict 409
+$ curl -i -X POST http://localhost:8082/complaints/cmp_1001/escalate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "initiatorId": "20251651078",
+    "reason": "Attempting second escalation"
+  }'
+
+HTTP/1.1 409 Conflict
+X-Powered-By: Express
+Content-Type: application/problem+json; charset=utf-8
+Content-Length: 172
+Date: Mon, 12 Oct 2026 16:12:10 GMT
+Connection: keep-alive
+
+{
+  "type": "/errors/state-conflict",
+  "title": "State Conflict",
+  "status": 409,
+  "detail": "Complaint cmp_1001 is already in escalated state"
+}
+
+--------------------------------------------------------------------------------
+SCENARIO 6: READ SINGLE RESOURCE (Status 200 OK)
+--------------------------------------------------------------------------------
+$ curl -i http://localhost:8082/complaints/cmp_1001
+
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 422
+Date: Mon, 12 Oct 2026 16:12:12 GMT
+Connection: keep-alive
+
+{
+  "id": "cmp_1001",
+  "trackingNumber": "CMP-2026-1001",
+  "reporterId": "20251651078",
+  "categoryId": "hostel",
+  "locationId": "hostel_block_a",
+  "title": "Severe water leakage in room 302",
+  "description": "Bathroom tap broken and dripping continuously since morning.",
+  "priority": "urgent",
+  "status": "submitted",
+  "isEscalated": true,
+  "slaDeadline": "2026-10-13T04:12:00.000Z",
+  "createdAt": "2026-10-12T16:12:00.000Z"
+}
+
+--------------------------------------------------------------------------------
+SCENARIO 7: FILTERED LIST USING QUERY STRING (Status 200 OK)
+--------------------------------------------------------------------------------
+$ curl -i "http://localhost:8082/complaints?category=hostel"
+
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 424
+Date: Mon, 12 Oct 2026 16:12:14 GMT
+Connection: keep-alive
+
+[
+  {
+    "id": "cmp_1001",
+    "trackingNumber": "CMP-2026-1001",
+    "reporterId": "20251651078",
+    "categoryId": "hostel",
+    "locationId": "hostel_block_a",
+    "title": "Severe water leakage in room 302",
+    "description": "Bathroom tap broken and dripping continuously since morning.",
+    "priority": "urgent",
+    "status": "submitted",
+    "isEscalated": true,
+    "slaDeadline": "2026-10-13T04:12:00.000Z",
+    "createdAt": "2026-10-12T16:12:00.000Z"
+  }
+]

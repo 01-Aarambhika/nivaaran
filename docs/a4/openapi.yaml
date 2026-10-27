@@ -1,0 +1,377 @@
+openapi: 3.0.3
+info:
+  title: Nivaaran Complaints Service
+  version: 1.0.0
+  description: Central grievance orchestrator for campus redressal. Manages lifecycle, escalation, comments, and idempotent filing.
+servers:
+  - url: http://localhost:8082
+    description: Local development server
+  - url: https://api.nivaaran.internal/complaints
+    description: Internal cluster gateway
+
+paths:
+  /complaints:
+    post:
+      summary: File a new grievance complaint
+      description: Submits a complaint. Supports Idempotency-Key header to prevent duplicate records from retries.
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          schema:
+            type: string
+          required: false
+          description: Client-generated unique token to safely retry filing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateComplaintRequest'
+      responses:
+        '201':
+          description: Complaint created successfully
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URI of the created complaint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintRepresentation'
+        '200':
+          description: Idempotent repeat returned without creating duplicate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintRepresentation'
+        '400':
+          description: Malformed request body or field validation failure
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '422':
+          description: Domain business rule refusal (e.g. invalid user or inactive category)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          description: Dependent service unreachable and outbox capacity exceeded
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+    get:
+      summary: List and filter complaints
+      description: Returns a list of complaints filtered by category, status, or reporter
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+          description: Category filter (hostel, mess, campus)
+        - in: query
+          name: status
+          schema:
+            type: string
+          description: Lifecycle status filter (submitted, assigned, resolved)
+      responses:
+        '200':
+          description: List of complaints matching filter
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ComplaintRepresentation'
+        '400':
+          description: Invalid query filter parameter
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /complaints/{id}:
+    get:
+      summary: Read a single complaint
+      description: Fetch a specific grievance by complaint ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Unique complaint ID
+      responses:
+        '200':
+          description: Complaint retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintRepresentation'
+        '404':
+          description: Complaint not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /complaints/{id}/escalate:
+    post:
+      summary: Escalate an overdue complaint
+      description: Triggers escalation to higher administrative tier when deadline passes
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Unique complaint ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EscalateRequest'
+      responses:
+        '200':
+          description: Complaint escalated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintRepresentation'
+        '404':
+          description: Complaint not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: State conflict (already escalated or not in escalatable state)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /complaints/{id}/comments:
+    post:
+      summary: Add a comment to a complaint thread
+      description: Post a clarification or update to the grievance discussion thread
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Unique complaint ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCommentRequest'
+      responses:
+        '201':
+          description: Comment appended to complaint thread
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentRepresentation'
+        '400':
+          description: Empty or invalid comment body
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Complaint not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+components:
+  schemas:
+    CreateComplaintRequest:
+      type: object
+      required:
+        - userId
+        - categoryId
+        - locationId
+        - title
+        - description
+      properties:
+        userId:
+          type: string
+          description: Roll number or user ID of reporter
+          example: "20251651078"
+        categoryId:
+          type: string
+          enum: [hostel, mess, campus, it_support, academic, transport]
+          example: "hostel"
+        locationId:
+          type: string
+          example: "hostel_block_a"
+        title:
+          type: string
+          minLength: 5
+          maxLength: 120
+          example: "Broken tap causing water leakage"
+        description:
+          type: string
+          minLength: 10
+          maxLength: 2000
+          example: "Room 302 bathroom tap has been continuously dripping since morning."
+        priority:
+          type: string
+          enum: [normal, urgent]
+          default: normal
+        isAnonymous:
+          type: boolean
+          default: false
+
+    ComplaintRepresentation:
+      type: object
+      required:
+        - id
+        - trackingNumber
+        - categoryId
+        - locationId
+        - title
+        - description
+        - priority
+        - status
+        - isEscalated
+        - createdAt
+      properties:
+        id:
+          type: string
+          example: "cmp_1"
+        trackingNumber:
+          type: string
+          example: "CMP-2026-1001"
+        reporterId:
+          type: string
+          nullable: true
+          example: "20251651078"
+        categoryId:
+          type: string
+          example: "hostel"
+        locationId:
+          type: string
+          example: "hostel_block_a"
+        title:
+          type: string
+          example: "Broken tap causing water leakage"
+        description:
+          type: string
+          example: "Room 302 bathroom tap has been continuously dripping since morning."
+        priority:
+          type: string
+          example: "normal"
+        status:
+          type: string
+          example: "submitted"
+        isEscalated:
+          type: boolean
+          example: false
+        slaDeadline:
+          type: string
+          format: date-time
+          example: "2026-10-14T16:00:00Z"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-10-12T16:00:00Z"
+
+    EscalateRequest:
+      type: object
+      required:
+        - initiatorId
+        - reason
+      properties:
+        initiatorId:
+          type: string
+          example: "20251651078"
+        reason:
+          type: string
+          minLength: 5
+          example: "SLA turnaround expired with no staff assigned."
+
+    AddCommentRequest:
+      type: object
+      required:
+        - authorId
+        - message
+      properties:
+        authorId:
+          type: string
+          example: "20251651078"
+        authorRole:
+          type: string
+          default: "student"
+        message:
+          type: string
+          minLength: 2
+          maxLength: 1000
+          example: "Plumber visited but required additional spare parts."
+
+    CommentRepresentation:
+      type: object
+      required:
+        - commentId
+        - complaintId
+        - authorId
+        - message
+        - createdAt
+      properties:
+        commentId:
+          type: string
+          example: "comm_1"
+        complaintId:
+          type: string
+          example: "cmp_1"
+        authorId:
+          type: string
+          example: "20251651078"
+        authorRole:
+          type: string
+          example: "student"
+        message:
+          type: string
+          example: "Plumber visited but required additional spare parts."
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-10-12T16:05:00Z"
+
+    ProblemDetails:
+      type: object
+      required:
+        - type
+        - title
+        - status
+        - detail
+      properties:
+        type:
+          type: string
+          example: "/errors/invalid-request"
+        title:
+          type: string
+          example: "Invalid Request"
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: "Validation failed for request body."
+        errors:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+          example: [["title", "required minimum 5 characters"]]

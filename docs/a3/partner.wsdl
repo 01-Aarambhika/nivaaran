@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions 
+    name="NationalSMSService"
+    targetNamespace="urn:nivaaran:telecom:sms"
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:tns="urn:nivaaran:telecom:sms"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <!-- 1. Types: XML Schema defining message payloads -->
+    <types>
+        <xsd:schema targetNamespace="urn:nivaaran:telecom:sms" elementFormDefault="qualified">
+            
+            <xsd:element name="sendSMSRequest">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="recipientNumber" type="xsd:string"/>
+                        <xsd:element name="senderId" type="xsd:string"/>
+                        <xsd:element name="messageText" type="xsd:string"/>
+                        <xsd:element name="priority" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:element name="sendSMSResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="messageId" type="xsd:string"/>
+                        <xsd:element name="deliveryStatus" type="xsd:string"/>
+                        <xsd:element name="dispatchedAt" type="xsd:dateTime"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:element name="smsFaultDetail">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="errorCode" type="xsd:string"/>
+                        <xsd:element name="detailMessage" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+        </xsd:schema>
+    </types>
+
+    <!-- 2. Messages: Parameter mapping for operations -->
+    <message name="sendSMSRequestMessage">
+        <part name="parameters" element="tns:sendSMSRequest"/>
+    </message>
+
+    <message name="sendSMSResponseMessage">
+        <part name="parameters" element="tns:sendSMSResponse"/>
+    </message>
+
+    <message name="smsFaultMessage">
+        <part name="fault" element="tns:smsFaultDetail"/>
+    </message>
+
+    <!-- 3. PortType: Abstract interface definition -->
+    <portType name="SMSPortType">
+        <operation name="sendSMS">
+            <input message="tns:sendSMSRequestMessage"/>
+            <output message="tns:sendSMSResponseMessage"/>
+            <fault name="smsFault" message="tns:smsFaultMessage"/>
+        </operation>
+    </portType>
+
+    <!-- 4. Binding: Concrete SOAP 1.1 Document/Literal over HTTP binding -->
+    <binding name="SMSBinding" type="tns:SMSPortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="sendSMS">
+            <soap:operation soapAction="urn:nivaaran:telecom:sms/sendSMS"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+            <fault name="smsFault">
+                <soap:fault name="smsFault" use="literal"/>
+            </fault>
+        </operation>
+    </binding>
+
+    <!-- 5. Service & Port: Concrete Network Address -->
+    <service name="NationalSMSService">
+        <documentation>External Telecom SMS Delivery Gateway for Enterprise Alert Dispatch</documentation>
+        <port name="SMSPort" binding="tns:SMSBinding">
+            <soap:address location="https://api.telecomsms.internal/ws/sms"/>
+        </port>
+    </service>
+
+</definitions>
