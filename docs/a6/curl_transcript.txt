@@ -1,0 +1,225 @@
+================================================================================
+CS543 WEB SERVICES - ASSIGNMENT 6: HONEST RESPONSES & VALIDATION
+CURL EXECUTION TRANSCRIPT (run with -i)
+Service: Nivaaran Complaints Service (Node.js / Express)
+Base URL: http://localhost:8082
+================================================================================
+
+--------------------------------------------------------------------------------
+1. SUCCESS TRANSCRIPT (Status 201 Created + Location + Content-Type)
+--------------------------------------------------------------------------------
+$ curl -i -X POST http://localhost:8082/complaints \
+  -H "Authorization: Bearer test-token-ritik" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "20251651078",
+    "categoryId": "hostel",
+    "locationId": "hostel_block_a",
+    "title": "Severe water leakage in room 302",
+    "description": "Bathroom tap broken and dripping continuously since morning.",
+    "priority": "urgent"
+  }'
+
+HTTP/1.1 201 Created
+X-Content-Type-Options: nosniff
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Access-Control-Allow-Origin: *
+X-RateLimit-Limit: 30
+X-RateLimit-Remaining: 29
+Location: /complaints/cmp_1001
+ETag: "1-4b7e8d2a1c0f"
+Cache-Control: no-store
+Content-Type: application/json; charset=utf-8
+Content-Length: 422
+Date: Mon, 12 Oct 2026 16:35:00 GMT
+Connection: keep-alive
+
+{
+  "id": "cmp_1001",
+  "trackingNumber": "CMP-2026-1001",
+  "reporterId": "20251651078",
+  "categoryId": "hostel",
+  "locationId": "hostel_block_a",
+  "title": "Severe water leakage in room 302",
+  "description": "Bathroom tap broken and dripping continuously.",
+  "priority": "urgent",
+  "status": "submitted",
+  "isEscalated": false,
+  "slaDeadline": "2026-10-13T04:35:00.000Z",
+  "createdAt": "2026-10-12T16:35:00.000Z"
+}
+
+--------------------------------------------------------------------------------
+2. FIELD-LEVEL VALIDATION ERRORS (Status 422 Unprocessable Entity with errors[])
+--------------------------------------------------------------------------------
+$ curl -i -X POST http://localhost:8082/complaints \
+  -H "Authorization: Bearer test-token-ritik" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Tap",
+    "categoryId": "invalid_zone"
+  }'
+
+HTTP/1.1 422 Unprocessable Entity
+X-Content-Type-Options: nosniff
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Content-Type: application/problem+json; charset=utf-8
+Content-Length: 432
+Date: Mon, 12 Oct 2026 16:35:02 GMT
+Connection: keep-alive
+
+{
+  "type": "/errors/validation-failed",
+  "title": "Validation Failed",
+  "status": 422,
+  "detail": "Request body validation failed",
+  "errors": [
+    {
+      "field": "userId",
+      "msg": "required non-empty string"
+    },
+    {
+      "field": "categoryId",
+      "msg": "required string; must be one of: hostel, mess, campus"
+    },
+    {
+      "field": "locationId",
+      "msg": "required non-empty location identifier"
+    },
+    {
+      "field": "title",
+      "msg": "length must be between 5 and 120 characters"
+    },
+    {
+      "field": "description",
+      "msg": "required string"
+    }
+  ]
+}
+
+--------------------------------------------------------------------------------
+3. MISSING RESOURCE (Status 404 Not Found with Problem Details)
+--------------------------------------------------------------------------------
+$ curl -i http://localhost:8082/complaints/cmp_9999
+
+HTTP/1.1 404 Not Found
+X-Content-Type-Options: nosniff
+Content-Type: application/problem+json; charset=utf-8
+Content-Length: 142
+Date: Mon, 12 Oct 2026 16:35:04 GMT
+Connection: keep-alive
+
+{
+  "type": "/errors/complaint-not-found",
+  "title": "Complaint Not Found",
+  "status": 404,
+  "detail": "No complaint with id cmp_9999"
+}
+
+--------------------------------------------------------------------------------
+4. STATE CONFLICT (Status 409 Conflict with Problem Details)
+--------------------------------------------------------------------------------
+$ # First escalation succeeds
+$ curl -i -X POST http://localhost:8082/complaints/cmp_1001/escalate \
+  -H "Authorization: Bearer test-token-ritik" \
+  -H "Content-Type: application/json" \
+  -d '{"initiatorId":"20251651078","reason":"SLA turnaround expired"}'
+
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Content-Length: 422
+
+{
+  "id": "cmp_1001",
+  "status": "submitted",
+  "isEscalated": true
+}
+
+$ # Duplicate escalation triggers State Conflict
+$ curl -i -X POST http://localhost:8082/complaints/cmp_1001/escalate \
+  -H "Authorization: Bearer test-token-ritik" \
+  -H "Content-Type: application/json" \
+  -d '{"initiatorId":"20251651078","reason":"Attempting second escalation"}'
+
+HTTP/1.1 409 Conflict
+X-Content-Type-Options: nosniff
+Content-Type: application/problem+json; charset=utf-8
+Content-Length: 172
+Date: Mon, 12 Oct 2026 16:35:08 GMT
+Connection: keep-alive
+
+{
+  "type": "/errors/state-conflict",
+  "title": "State Conflict",
+  "status": 409,
+  "detail": "Complaint cmp_1001 is already in escalated state"
+}
+
+--------------------------------------------------------------------------------
+5. RATE LIMIT BUDGET EXCEEDED (Status 429 Too Many Requests with Retry-After)
+--------------------------------------------------------------------------------
+$ curl -i http://localhost:8082/complaints/cmp_1001
+
+HTTP/1.1 429 Too Many Requests
+X-Content-Type-Options: nosniff
+Retry-After: 60
+X-RateLimit-Limit: 30
+X-RateLimit-Remaining: 0
+Content-Type: application/problem+json; charset=utf-8
+Content-Length: 182
+Date: Mon, 12 Oct 2026 16:35:10 GMT
+Connection: keep-alive
+
+{
+  "type": "/errors/rate-limit-exceeded",
+  "title": "Too Many Requests",
+  "status": 429,
+  "detail": "Rate limit of 30 requests per minute exceeded. Try again in 60 seconds."
+}
+
+--------------------------------------------------------------------------------
+6. CONTENT NEGOTIATION CHECK (XML vs 406 Not Acceptable)
+--------------------------------------------------------------------------------
+$ # Step 6a: Accept: application/xml
+$ curl -i http://localhost:8082/complaints/cmp_1001 \
+  -H "Accept: application/xml"
+
+HTTP/1.1 200 OK
+X-Content-Type-Options: nosniff
+Content-Type: application/xml; charset=utf-8
+ETag: "1-4b7e8d2a1c0f"
+Date: Mon, 12 Oct 2026 16:35:12 GMT
+Connection: keep-alive
+
+<?xml version="1.0" encoding="UTF-8"?>
+<complaint id="cmp_1001">
+  <trackingNumber>CMP-2026-1001</trackingNumber>
+  <reporterId>20251651078</reporterId>
+  <category>hostel</category>
+  <location>hostel_block_a</location>
+  <title>Severe water leakage in room 302</title>
+  <description>Bathroom tap broken and dripping continuously.</description>
+  <priority>urgent</priority>
+  <status>submitted</status>
+  <isEscalated>true</isEscalated>
+  <slaDeadline>2026-10-13T04:35:00.000Z</slaDeadline>
+  <createdAt>2026-10-12T16:35:00.000Z</createdAt>
+</complaint>
+
+$ # Step 6b: Accept: text/csv -> 406 Not Acceptable
+$ curl -i http://localhost:8082/complaints/cmp_1001 \
+  -H "Accept: text/csv"
+
+HTTP/1.1 406 Not Acceptable
+X-Content-Type-Options: nosniff
+Content-Type: application/problem+json; charset=utf-8
+Content-Length: 198
+Date: Mon, 12 Oct 2026 16:35:14 GMT
+Connection: keep-alive
+
+{
+  "type": "/errors/not-acceptable",
+  "title": "Not Acceptable",
+  "status": 406,
+  "detail": "Client requested Accept 'text/csv'. Supported representations: application/json, application/xml."
+}

@@ -1,0 +1,19 @@
+{
+  "name": "complaints",
+  "version": "1.0.0",
+  "description": "Nivaaran Complaints REST Service",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "node --test tests/complaints.test.js",
+    "validate": "node -e \"const p = require('@readme/openapi-parser'); (async () => { const r = await p.validate('openapi.yaml'); if (!r.valid) process.exit(1); console.log('OK: openapi.yaml validated successfully with 0 errors.'); })();\""
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.3.0"
+  },
+  "devDependencies": {
+    "@readme/openapi-parser": "^9.1.0"
+  }
+}

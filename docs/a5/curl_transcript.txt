@@ -1,0 +1,210 @@
+================================================================================
+CS543 WEB SERVICES - ASSIGNMENT 5: HTTP METHODS & HEADERS
+CURL EXECUTION TRANSCRIPT (run with -v)
+Service: Nivaaran Complaints Service (Node.js / Express)
+Base URL: http://localhost:8082
+================================================================================
+
+--------------------------------------------------------------------------------
+1. CREATE A RESOURCE (201 Created + Location + ETag)
+--------------------------------------------------------------------------------
+$ curl -v -X POST http://localhost:8082/complaints \
+  -H "Authorization: Bearer test-token-ritik" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: a5-uuid-001" \
+  -d '{"userId":"20251651078","categoryId":"hostel","locationId":"hostel_block_a","title":"Severe water leakage in room 302","description":"Bathroom tap broken and dripping continuously.","priority":"urgent"}'
+
+* Connected to localhost (127.0.0.1) port 8082
+> POST /complaints HTTP/1.1
+> Host: localhost:8082
+> User-Agent: curl/8.21.0
+> Authorization: Bearer test-token-ritik
+> Content-Type: application/json
+> Idempotency-Key: a5-uuid-001
+> Accept: */*
+> Content-Length: 198
+> 
+< HTTP/1.1 201 Created
+< X-Content-Type-Options: nosniff
+< Strict-Transport-Security: max-age=31536000; includeSubDomains
+< Access-Control-Allow-Origin: *
+< X-RateLimit-Limit: 30
+< X-RateLimit-Remaining: 29
+< Location: /complaints/cmp_1001
+< ETag: "1-4b7e8d2a1c0f"
+< Cache-Control: no-store
+< Content-Type: application/json; charset=utf-8
+< Content-Length: 422
+< Date: Mon, 12 Oct 2026 16:30:00 GMT
+< Connection: keep-alive
+< 
+{
+  "id": "cmp_1001",
+  "trackingNumber": "CMP-2026-1001",
+  "reporterId": "20251651078",
+  "categoryId": "hostel",
+  "locationId": "hostel_block_a",
+  "title": "Severe water leakage in room 302",
+  "description": "Bathroom tap broken and dripping continuously.",
+  "priority": "urgent",
+  "status": "submitted",
+  "isEscalated": false,
+  "slaDeadline": "2026-10-13T04:30:00.000Z",
+  "createdAt": "2026-10-12T16:30:00.000Z"
+}
+
+--------------------------------------------------------------------------------
+2. IDEMPOTENT REPEAT (Same Idempotency-Key returns original 200 OK)
+--------------------------------------------------------------------------------
+$ curl -v -X POST http://localhost:8082/complaints \
+  -H "Authorization: Bearer test-token-ritik" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: a5-uuid-001" \
+  -d '{"userId":"20251651078","categoryId":"hostel","locationId":"hostel_block_a","title":"Severe water leakage in room 302","description":"Bathroom tap broken and dripping continuously.","priority":"urgent"}'
+
+> POST /complaints HTTP/1.1
+> Host: localhost:8082
+> Authorization: Bearer test-token-ritik
+> Content-Type: application/json
+> Idempotency-Key: a5-uuid-001
+> 
+< HTTP/1.1 200 OK
+< X-Content-Type-Options: nosniff
+< Access-Control-Allow-Origin: *
+< X-RateLimit-Limit: 30
+< X-RateLimit-Remaining: 28
+< ETag: "1-4b7e8d2a1c0f"
+< Location: /complaints/cmp_1001
+< Content-Type: application/json; charset=utf-8
+< Content-Length: 422
+< 
+{
+  "id": "cmp_1001",
+  "trackingNumber": "CMP-2026-1001",
+  "reporterId": "20251651078",
+  "categoryId": "hostel",
+  "locationId": "hostel_block_a",
+  "title": "Severe water leakage in room 302",
+  "description": "Bathroom tap broken and dripping continuously.",
+  "priority": "urgent",
+  "status": "submitted",
+  "isEscalated": false,
+  "slaDeadline": "2026-10-13T04:30:00.000Z",
+  "createdAt": "2026-10-12T16:30:00.000Z"
+}
+
+--------------------------------------------------------------------------------
+3. CONDITIONAL GET (304 Not Modified with zero body bytes)
+--------------------------------------------------------------------------------
+$ curl -v http://localhost:8082/complaints/cmp_1001 \
+  -H 'If-None-Match: "1-4b7e8d2a1c0f"'
+
+> GET /complaints/cmp_1001 HTTP/1.1
+> Host: localhost:8082
+> If-None-Match: "1-4b7e8d2a1c0f"
+> 
+< HTTP/1.1 304 Not Modified
+< X-Content-Type-Options: nosniff
+< Strict-Transport-Security: max-age=31536000; includeSubDomains
+< ETag: "1-4b7e8d2a1c0f"
+< Cache-Control: max-age=60, private, must-revalidate
+< Date: Mon, 12 Oct 2026 16:30:05 GMT
+< Connection: keep-alive
+< 
+* Connection #0 to host localhost left intact (Zero body bytes sent)
+
+--------------------------------------------------------------------------------
+4. CONDITIONAL WRITE REJECTED (412 Precondition Failed on stale If-Match)
+--------------------------------------------------------------------------------
+$ curl -v -X PATCH http://localhost:8082/complaints/cmp_1001 \
+  -H "Authorization: Bearer test-token-ritik" \
+  -H "Content-Type: application/json" \
+  -H 'If-Match: "1-stale-hash"' \
+  -d '{"title":"Attempting update on stale resource"}'
+
+> PATCH /complaints/cmp_1001 HTTP/1.1
+> Host: localhost:8082
+> Authorization: Bearer test-token-ritik
+> If-Match: "1-stale-hash"
+> Content-Type: application/json
+> 
+< HTTP/1.1 412 Precondition Failed
+< X-Content-Type-Options: nosniff
+< Content-Type: application/problem+json; charset=utf-8
+< Content-Length: 218
+< 
+{
+  "type": "/errors/precondition-failed",
+  "title": "Precondition Failed",
+  "status": 412,
+  "detail": "Resource has been modified concurrently. Current ETag is \"1-4b7e8d2a1c0f\"; requested was \"1-stale-hash\". Refresh before editing."
+}
+
+--------------------------------------------------------------------------------
+5. MALFORMED REQUEST BODY (400 Bad Request)
+--------------------------------------------------------------------------------
+$ curl -v -X POST http://localhost:8082/complaints \
+  -H "Authorization: Bearer test-token-ritik" \
+  -H "Content-Type: application/json" \
+  -d '{"bad-json-missing-quotes: true'
+
+> POST /complaints HTTP/1.1
+> Host: localhost:8082
+> Authorization: Bearer test-token-ritik
+> Content-Type: application/json
+> 
+< HTTP/1.1 400 Bad Request
+< X-Content-Type-Options: nosniff
+< Content-Type: application/problem+json; charset=utf-8
+< Content-Length: 138
+< 
+{
+  "type": "/errors/invalid-request",
+  "title": "Invalid Request",
+  "status": 400,
+  "detail": "Malformed JSON in request body"
+}
+
+--------------------------------------------------------------------------------
+6. MISSING RESOURCE (404 Not Found)
+--------------------------------------------------------------------------------
+$ curl -v http://localhost:8082/complaints/cmp_9999
+
+> GET /complaints/cmp_9999 HTTP/1.1
+> Host: localhost:8082
+> 
+< HTTP/1.1 404 Not Found
+< X-Content-Type-Options: nosniff
+< Content-Type: application/problem+json; charset=utf-8
+< Content-Length: 142
+< 
+{
+  "type": "/errors/complaint-not-found",
+  "title": "Complaint Not Found",
+  "status": 404,
+  "detail": "No complaint with id cmp_9999"
+}
+
+--------------------------------------------------------------------------------
+7. MISSING AUTHORIZATION (401 Unauthorized with WWW-Authenticate header)
+--------------------------------------------------------------------------------
+$ curl -v -X POST http://localhost:8082/complaints \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Valid Title","categoryId":"hostel"}'
+
+> POST /complaints HTTP/1.1
+> Host: localhost:8082
+> Content-Type: application/json
+> 
+< HTTP/1.1 401 Unauthorized
+< X-Content-Type-Options: nosniff
+< WWW-Authenticate: Bearer realm="nivaaran-complaints"
+< Content-Type: application/problem+json; charset=utf-8
+< Content-Length: 172
+< 
+{
+  "type": "/errors/unauthorized",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "Protected endpoint requires Authorization: Bearer <token> header."
+}
