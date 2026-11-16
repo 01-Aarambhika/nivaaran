@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nivaaran | Hostel Management</title><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="authView" class="auth-shell">
+    <section class="auth-card">
+      <div class="brand-mark">N</div><p class="eyebrow">HOSTEL MANAGEMENT PLATFORM</p>
+      <h1>Welcome to Nivaaran</h1><p class="muted">One place for hostel services and student support.</p>
+      <div class="tabs"><button class="tab active" data-auth="login">Login</button><button class="tab" data-auth="register">Create account</button></div>
+      <form id="authForm">
+        <div id="nameWrap" class="field hidden"><label>Full name</label><input id="name" placeholder="Your full name"></div>
+        <div class="field"><label>Email</label><input id="email" type="email" required placeholder="you@example.com"></div>
+        <div id="phoneWrap" class="field hidden"><label>Phone</label><input id="phone" placeholder="Phone number"></div>
+        <div class="field"><label>Password</label><input id="password" type="password" required minlength="8" placeholder="At least 8 characters"></div>
+        <button class="primary full" type="submit" id="authSubmit">Sign in</button><p id="authMessage" class="message"></p>
+      </form>
+      <p class="hint">Demo admin: admin@nivaaran.local / Admin@123<br>Demo student: student@nivaaran.local / Student@123</p>
+    </section>
+  </div>
+
+  <div id="appView" class="app hidden">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark small">N</span><div><b>Nivaaran</b><small>HOSTEL PORTAL</small></div></div>
+      <div class="side-label">WORKSPACE</div>
+      <nav id="nav">
+        <button class="nav-item active" data-page="overview">▦ <span>Overview</span></button>
+        <button class="nav-item" data-page="complaints">▤ <span>Complaints</span></button>
+        <button class="nav-item" data-page="rooms">⌂ <span>Room allocation</span></button>
+        <button class="nav-item" data-page="mess">☷ <span>Mess & food</span></button>
+        <button class="nav-item" data-page="payments">₹ <span>Payments</span></button>
+        <button class="nav-item" data-page="notifications">♧ <span>Notifications</span></button>
+        <button class="nav-item admin-only hidden" data-page="reports">▥ <span>Admin reports</span></button>
+      </nav>
+      <div class="sidebar-bottom"><div class="avatar" id="avatar">S</div><div class="user-meta"><b id="userName">Student</b><small id="userRole">STUDENT</small></div><button id="logout" class="logout" title="Log out">↗</button></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div><p class="eyebrow" id="pageEyebrow">STUDENT PORTAL</p><h2 id="pageTitle">Overview</h2></div><div class="top-actions"><span class="status-dot"></span><span>System online</span></div></header>
+      <section id="content" class="content"></section>
+      <footer>© 2026 Nivaaran · Hostel Management & Issue Resolution</footer>
+    </main>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script src="app.js"></script>
+</body></html>
