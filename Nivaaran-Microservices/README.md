@@ -8,7 +8,7 @@ Everything in this project is a REST API with JSON over HTTP, described by OpenA
 
 ## Submission Deliverables & Links
 
-- **GitHub Repository:** [https://github.com/ritik-78/Nivaaran-Grievance-Redressal](https://github.com/ritik-78/Nivaaran-Grievance-Redressal)
+- **GitHub Repository:** [clich here for github repo](https://github.com/01-Aarambhika/nivaaran/edit/main/Nivaaran-Microservices)
 - **Working Video Demonstration:** [Google Drive Demo Folder](https://drive.google.com/drive/folders/1A2B3C4D5E6F7G8H9I0J_NIVAARAN_DEMO?usp=sharing) (Access: *"Anyone with the link"*)
 - **Complete Submission Report:** [`ReadMe.pdf`](ReadMe.pdf) (Covers all questions for Assignments 01 to 06)
 
