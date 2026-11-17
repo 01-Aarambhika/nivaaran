@@ -16,9 +16,9 @@ Everything in this project is a REST API with JSON over HTTP, described by OpenA
 
 | Roll No | Name | Assigned Microservices | Core Responsibilities |
 |---|---|---|---|
-| **20251651001** | **Aarambhika Sinha** | • `services/accounts` (Port 8080)<br>• `services/directory` (Port 8081) | Identity and Access Management, JWT Authentication, RBAC, User Sessions, Campus Taxonomy, Category and SLA Registry |
+| **20251651001** | **Aarambhika** | • `services/accounts` (Port 8080)<br>• `services/directory` (Port 8081) | Identity and Access Management, JWT Authentication, RBAC, User Sessions, Campus Taxonomy, Category and SLA Registry |
 | **20251651006** | **Abhishek Kumar** | • `services/complaints` (Port 8082)<br>• `services/resolution` (Port 8083) | Central Grievance Lifecycle, Concurrency Control (ETags), Staff Duty Assignment, Inspection and Resolution Workflows |
-| **20251651078** | **Ritik Sharma** | • `services/notifications` (Port 8084)<br>• `services/analytics` (Port 8085)<br>• `client` (Web Frontend) | Event Dispatcher and Message Gateway, Immutable Audit Ledger, SLA Compliance Telemetry, Modern Civic UI Portal |
+| **20251651078** | **Ritik Kumar** | • `services/notifications` (Port 8084)<br>• `services/analytics` (Port 8085)<br>• `client` (Web Frontend) | Event Dispatcher and Message Gateway, Immutable Audit Ledger, SLA Compliance Telemetry, Modern Civic UI Portal |
 
 
 ## What it does
@@ -49,12 +49,12 @@ The full architecture consists of **six microservices**. Each microservice stric
 
 | # | Service | Port | Database | Lead Owner | Owns | Status |
 |---|---|---|---|---|---|---|
-| 1 | **Accounts** | `8080` | `nivaaran_accounts` | Aarambhika Sinha (20251651001) | users, roles, login, sessions | **Implemented & Tested** (`services/accounts/`) |
-| 2 | **Directory** | `8081` | `nivaaran_directory` | Aarambhika Sinha (20251651001) | categories, locations, SLA deadline hours | **Implemented & Tested** (`services/directory/`) |
+| 1 | **Accounts** | `8080` | `nivaaran_accounts` | Aarambhika (20251651001) | users, roles, login, sessions | **Implemented & Tested** (`services/accounts/`) |
+| 2 | **Directory** | `8081` | `nivaaran_directory` | Aarambhika (20251651001) | categories, locations, SLA deadline hours | **Implemented & Tested** (`services/directory/`) |
 | 3 | **Complaints** | `8082` | `nivaaran_complaints` | Abhishek Kumar (20251651006) | grievance lifecycle, status transitions, comments, feedback | **Implemented & Tested** (`services/complaints/`) |
 | 4 | **Resolution** | `8083` | `nivaaran_resolution` | Abhishek Kumar (20251651006) | staff duties, assignments, duty roster | **Implemented & Tested** (`services/resolution/`) |
-| 5 | **Notifications** | `8084` | `nivaaran_notifications` | Ritik Sharma (20251651078) | message log, SMS partner gateway | **Implemented & Tested** (`services/notifications/`) |
-| 6 | **Analytics & SLA** | `8085` | `nivaaran_analytics` | Ritik Sharma (20251651078) | audit trails, SLA compliance telemetry, escalation reports | **Implemented & Tested** (`services/analytics/`) |
+| 5 | **Notifications** | `8084` | `nivaaran_notifications` | Ritik Kumar (20251651078) | message log, SMS partner gateway | **Implemented & Tested** (`services/notifications/`) |
+| 6 | **Analytics & SLA** | `8085` | `nivaaran_analytics` | Ritik Kumar (20251651078) | audit trails, SLA compliance telemetry, escalation reports | **Implemented & Tested** (`services/analytics/`) |
 
 The core Complaints service talks to Accounts (`GET /users/{id}`) over REST to verify the reporter with resilient fallback. The full architecture design, contracts, and schema for all six services are documented in [`docs/a2/`](docs/a2/).
 
