@@ -1,0 +1,15 @@
+{
+  "name": "notifications",
+  "version": "1.0.0",
+  "description": "Nivaaran Notifications Service — message dispatch log and SMS partner gateway",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "node --test tests/notifications.test.js"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.3.0",
+    "mysql2": "^3.24.6"
+  }
+}

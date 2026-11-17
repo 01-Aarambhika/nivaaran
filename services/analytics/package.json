@@ -1,0 +1,15 @@
+{
+  "name": "analytics",
+  "version": "1.0.0",
+  "description": "Nivaaran Analytics & Audit Service — audit log, SLA compliance, escalation reports",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "node --test tests/analytics.test.js"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.3.0",
+    "mysql2": "^3.24.6"
+  }
+}
