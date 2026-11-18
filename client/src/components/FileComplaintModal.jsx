@@ -20,7 +20,7 @@ export default function FileComplaintModal({ isOpen, onClose, onSuccess }) {
     if (isOpen) {
       api.getCategories().then(cats => {
         setCategories(cats);
-        if (cats.length > 0 && !category) setCategory(cats[0].id);
+        if (cats.length > 0 && !category) setCategory(cats[0].id || cats[0].categoryId);
       });
     }
   }, [isOpen]);
@@ -29,7 +29,7 @@ export default function FileComplaintModal({ isOpen, onClose, onSuccess }) {
     if (category) {
       api.getLocations(category).then(locs => {
         setLocations(locs);
-        if (locs.length > 0) setLocation(locs[0].id);
+        if (locs.length > 0) setLocation(locs[0].id || locs[0].locationId);
       });
     }
   }, [category]);
@@ -98,9 +98,10 @@ export default function FileComplaintModal({ isOpen, onClose, onSuccess }) {
             <div className="form-group">
               <label className="form-label">Department Category</label>
               <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
-                {categories.map(c => (
-                  <option key={c.id} value={c.id}>{c.name || c.displayName}</option>
-                ))}
+                {categories.map(c => {
+                  const val = c.id || c.categoryId;
+                  return <option key={val} value={val}>{c.name || c.displayName || val}</option>;
+                })}
               </select>
               <span className="form-help">Designated administrative unit</span>
             </div>
@@ -108,9 +109,10 @@ export default function FileComplaintModal({ isOpen, onClose, onSuccess }) {
             <div className="form-group">
               <label className="form-label">Campus Location / Zone</label>
               <select className="form-select" value={location} onChange={e => setLocation(e.target.value)}>
-                {locations.map(l => (
-                  <option key={l.id} value={l.id}>{l.name || l.zoneName || l.id}</option>
-                ))}
+                {locations.map(l => {
+                  const val = l.id || l.locationId;
+                  return <option key={val} value={val}>{l.name || l.zoneName || val}</option>;
+                })}
               </select>
               <span className="form-help">Specific area of incident</span>
             </div>

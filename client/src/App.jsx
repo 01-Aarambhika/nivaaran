@@ -27,7 +27,10 @@ function MainApp() {
 
   return (
     <div className="app-container">
-      <Navbar onOpenNewComplaint={() => setShowFileModal(true)} />
+      <Navbar
+        onOpenNewComplaint={() => setShowFileModal(true)}
+        onSelectComplaint={setSelectedComplaint}
+      />
 
       <main className="main-content">
         {!user ? (

@@ -26,12 +26,16 @@ function seed(userId, password, role, fullName = '') {
 function _reseed() {
   _users.clear();
   seed('ADM001',       'admin123',   'admin',              'Campus Administrator');
+  seed('A001',         'admin123',   'admin',              'Campus Administrator');
   seed('20251651078',  'demo123',    'student',            'Ritik Sharma');
   seed('20251651006',  'demo123',    'student',            'Abhishek Kumar');
   seed('20251651001',  'demo123',    'student',            'Aarambhika Sinha');
   seed('W101',         'warden123',  'warden',             'Hostel Warden');
+  seed('W001',         'warden123',  'warden',             'Hostel Warden');
   seed('M201',         'mess123',    'mess_incharge',      'Mess In-Charge');
+  seed('M001',         'mess123',    'mess_incharge',      'Mess In-Charge');
   seed('S301',         'maint123',   'maintenance_staff',  'Maintenance Staff');
+  seed('T001',         'maint123',   'maintenance_staff',  'Maintenance Staff');
 }
 
 _reseed();

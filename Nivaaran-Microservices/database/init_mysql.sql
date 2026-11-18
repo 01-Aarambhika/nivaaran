@@ -51,12 +51,12 @@ CREATE TABLE IF NOT EXISTS user_sessions (
 INSERT INTO users (user_id, full_name, email, role, department_scope, password_hash, version)
 VALUES
 ('ADM001', 'Campus Administrator', 'admin@iiitv.ac.in', 'admin', 'all', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 1), -- admin123
-('20251651078', 'Ritik Sharma', '20251651078@iiitv.ac.in', 'student', 'all', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 1), -- demo123
-('20251651006', 'Abhishek Kumar', '20251651006@iiitv.ac.in', 'student', 'all', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 1), -- demo123
-('20251651001', 'Aarambhika Sinha', '20251651001@iiitv.ac.in', 'student', 'all', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 1), -- demo123
-('W101', 'Hostel Warden', 'w101@iiitv.ac.in', 'warden', 'hostel', 'a43063f272a8f81015f6ad2845a7bb918499fb4ab401aa9fb4119d582f3ef4d6', 1), -- warden123
-('M201', 'Mess In-Charge', 'm201@iiitv.ac.in', 'mess_incharge', 'mess', '91a221f7dbb25e792da8d5a7114b35ad56f87de14d79e8cfcd56e40d04f21dcf', 1), -- mess123
-('S301', 'Campus Maintenance Staff', 's301@iiitv.ac.in', 'maintenance_staff', 'campus', '970f5e3e2646271a065c7ae00f074d61081ce2658a43fc36b6941197b0a7019d', 1) -- maint123
+('20251651078', 'Ritik Sharma', '20251651078@iiitv.ac.in', 'student', 'all', 'd3ad9315b7be5dd53b31a273b3b3aba5defe700808305aa16a3062b76658a791', 1), -- demo123
+('20251651006', 'Abhishek Kumar', '20251651006@iiitv.ac.in', 'student', 'all', 'd3ad9315b7be5dd53b31a273b3b3aba5defe700808305aa16a3062b76658a791', 1), -- demo123
+('20251651001', 'Aarambhika Sinha', '20251651001@iiitv.ac.in', 'student', 'all', 'd3ad9315b7be5dd53b31a273b3b3aba5defe700808305aa16a3062b76658a791', 1), -- demo123
+('W101', 'Hostel Warden', 'w101@iiitv.ac.in', 'warden', 'hostel', 'a08cacabcf3487a4830186ace52ea1cb2cabe3a69b9a037f2fcd67218963aaa3', 1), -- warden123
+('M201', 'Mess In-Charge', 'm201@iiitv.ac.in', 'mess_incharge', 'mess', '02cb3947572748aadb3e319968bacef46692c3e31ef8df67703ad10ec4248b7c', 1), -- mess123
+('S301', 'Campus Maintenance Staff', 's301@iiitv.ac.in', 'maintenance_staff', 'campus', '2eab737d095f86d7e5a1fc616298ac81169cc91b09d1035b44706bc0a1c10ecf', 1) -- maint123
 ON DUPLICATE KEY UPDATE full_name=VALUES(full_name);
 
 

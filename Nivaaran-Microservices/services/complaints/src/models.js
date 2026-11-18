@@ -19,6 +19,8 @@ class Complaint {
     description,
     priority = 'normal',
     status = 'submitted',
+    assignedTo = null,
+    assignedToName = null,
     slaDeadline,
     isEscalated = false,
     escalationTier = null,
@@ -40,6 +42,8 @@ class Complaint {
     this.description = description;
     this.priority = priority;
     this.status = status;
+    this.assignedTo = assignedTo;
+    this.assignedToName = assignedToName;
     this.slaDeadline = slaDeadline;
     this.isEscalated = isEscalated;
     this.escalationTier = escalationTier;
@@ -77,8 +81,11 @@ class Complaint {
       description: this.description,
       priority: this.priority,
       status: this.status,
+      assignedTo: this.assignedTo || null,
+      assignedToName: this.assignedToName || null,
       isEscalated: this.isEscalated,
       slaDeadline: this.slaDeadline,
+      feedback: this.feedback || null,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };

@@ -9,10 +9,19 @@
  *     complaint filing never fails on transient network drops.
  */
 
+const crypto = require('node:crypto');
 const { CircuitBreaker } = require('./breaker');
 
 const ACCOUNTS_URL = process.env.ACCOUNTS_URL || 'http://localhost:8080';
+const JWT_SECRET = process.env.JWT_SECRET || 'nivaaran-dev-secret';
 const breaker = new CircuitBreaker({ failMax: 5, resetAfterMs: 30000 });
+
+function getServiceToken() {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const body = Buffer.from(JSON.stringify({ userId: 'SERVICE_COMPLAINTS', role: 'admin' })).toString('base64url');
+  const sig = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+  return `${header}.${body}.${sig}`;
+}
 
 class UserVerificationError extends Error {
   constructor(message, status = 422) {
@@ -46,7 +55,8 @@ async function _fetchUserWithTimeout(userId, timeoutMs = 2000) {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${getServiceToken()}`
       },
       signal: controller.signal
     });

@@ -69,6 +69,9 @@ app.options('/complaints/:id', (req, res) => {
 app.post('/complaints', requireAuth, async (req, res, next) => {
   try {
     const body = req.body || {};
+    if (!body.userId && req.user && req.user.userId) {
+      body.userId = req.user.userId;
+    }
 
     // 1. Validate request body (validate-then-act)
     const errors = validateCreateComplaint(body);
@@ -156,7 +159,7 @@ app.get('/complaints/:id', async (req, res, next) => {
 // -----------------------------------------------------------------------------
 app.get('/complaints', async (req, res, next) => {
   try {
-    const { category, status } = req.query;
+    const { category, status, reporterUserId, priority } = req.query;
 
     if (category && !['hostel', 'mess', 'campus'].includes(category)) {
       return problem(res, 400, 'invalid-request', `Invalid category filter '${category}'. Allowed: hostel, mess, campus.`);
@@ -166,7 +169,7 @@ app.get('/complaints', async (req, res, next) => {
     }
 
     res.set('Cache-Control', 'max-age=30, private');
-    const items = await store.list({ category, status });
+    const items = await store.list({ category, status, reporterUserId, priority });
     return res.sendNegotiated(items, 200);
   } catch (err) {
     next(err);
@@ -187,7 +190,7 @@ app.patch('/complaints/:id', requireAuth, async (req, res, next) => {
 
     // Conditional Write: check If-Match
     const ifMatch = req.headers['if-match'];
-    if (ifMatch && ifMatch !== complaint.getETag()) {
+    if (ifMatch && ifMatch !== '*' && ifMatch !== complaint.getETag()) {
       return problem(
         res,
         412,
@@ -202,7 +205,7 @@ app.patch('/complaints/:id', requireAuth, async (req, res, next) => {
       return problem(res, 422, 'validation-failed', 'Patch validation failed', errors);
     }
 
-    const updated = await store.patch(id, body);
+    const updated = await store.patch(complaint.id, body);
     res.set('ETag', updated.getETag());
     res.set('Cache-Control', 'no-store');
 
@@ -242,7 +245,7 @@ app.delete('/complaints/:id', requireAuth, async (req, res, next) => {
 // -----------------------------------------------------------------------------
 // POST /complaints/:id/escalate - State-changing sub-resource (Protected)
 // -----------------------------------------------------------------------------
-app.post('/complaints/:id/escalate', requireAuth, async (req, res, next) => {
+const handleEscalate = async (req, res, next) => {
   try {
     const { id } = req.params;
     const complaint = await store.find(id);
@@ -256,12 +259,15 @@ app.post('/complaints/:id/escalate', requireAuth, async (req, res, next) => {
     }
 
     const body = req.body || {};
+    if (!body.initiatorId && req.user && req.user.userId) {
+      body.initiatorId = req.user.userId;
+    }
     const errors = validateEscalate(body);
     if (errors.length > 0) {
       return problem(res, 422, 'validation-failed', 'Escalation request validation failed', errors);
     }
 
-    const updated = await store.escalate(id, {
+    const updated = await store.escalate(complaint.id, {
       initiatorId: body.initiatorId,
       reason: body.reason
     });
@@ -273,7 +279,9 @@ app.post('/complaints/:id/escalate', requireAuth, async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
+};
+app.post('/complaints/:id/escalate', requireAuth, handleEscalate);
+app.post('/complaints/:id/escalations', requireAuth, handleEscalate);
 
 // -----------------------------------------------------------------------------
 // POST /complaints/:id/comments - Discussion thread (Protected)
@@ -288,12 +296,22 @@ app.post('/complaints/:id/comments', requireAuth, async (req, res, next) => {
     }
 
     const body = req.body || {};
+    if (!body.message && (body.comment || body.text)) {
+      body.message = body.comment || body.text;
+    }
+    if (!body.authorId && req.user && req.user.userId) {
+      body.authorId = req.user.userId;
+    }
+    if (!body.authorRole && req.user && req.user.role) {
+      body.authorRole = req.user.role;
+    }
+
     const errors = validateComment(body);
     if (errors.length > 0) {
       return problem(res, 422, 'validation-failed', 'Comment validation failed', errors);
     }
 
-    const comment = await store.addComment(id, {
+    const comment = await store.addComment(complaint.id, {
       authorId: body.authorId,
       authorRole: body.authorRole || 'student',
       message: body.message
@@ -318,9 +336,37 @@ app.get('/complaints/:id/comments', async (req, res, next) => {
       return problem(res, 404, 'complaint-not-found', `No complaint with id ${id}`);
     }
 
-    const comments = await store.getComments(id);
+    const comments = await store.getComments(complaint.id);
     res.set('Cache-Control', 'no-store');
     return res.sendNegotiated(comments, 200);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// -----------------------------------------------------------------------------
+// POST /complaints/:id/feedback - Student feedback / reopen (Protected)
+// -----------------------------------------------------------------------------
+app.post('/complaints/:id/feedback', requireAuth, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const complaint = await store.find(id);
+
+    if (!complaint) {
+      return problem(res, 404, 'complaint-not-found', `No complaint with id ${id}`);
+    }
+
+    const body = req.body || {};
+    const updated = await store.addFeedback(complaint.id, {
+      rating: body.rating,
+      comment: body.comment || '',
+      reopen: Boolean(body.reopen),
+      studentUserId: req.user?.userId || complaint.reporterId
+    });
+
+    res.set('ETag', updated.getETag());
+    res.set('Cache-Control', 'no-store');
+    return res.sendNegotiated(updated, 200);
   } catch (err) {
     next(err);
   }

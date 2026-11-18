@@ -15,7 +15,7 @@ let totalPassed = 0;
 
 for (const svc of services) {
   console.log(`\n▶ Running tests for ${svc.toUpperCase()} service...`);
-  const svcDir = path.join(__dirname, 'services', svc);
+  const svcDir = path.join(__dirname, 'Nivaaran-Microservices', 'services', svc);
   const testFile = path.join('tests', `${svc}.test.js`);
   
   const result = spawnSync('node', ['--test', testFile], {

@@ -14,10 +14,24 @@ export default function AssignModal({ isOpen, onClose, complaint, onSuccess }) {
     if (isOpen) {
       api.getStaffList().then(list => {
         setStaffList(list);
-        if (list.length > 0) setSelectedStaff(list[0].userId);
+        if (list.length > 0) {
+          // Pre-select staff according to complaint category
+          let preferred = list[0].userId;
+          if (complaint?.category === 'mess') {
+            const found = list.find(s => s.role === 'mess_incharge' || s.departmentScope === 'mess' || s.userId === 'M201');
+            if (found) preferred = found.userId;
+          } else if (complaint?.category === 'hostel') {
+            const found = list.find(s => s.role === 'warden' || s.departmentScope === 'hostel' || s.userId === 'W101');
+            if (found) preferred = found.userId;
+          } else if (complaint?.category === 'campus') {
+            const found = list.find(s => s.role === 'maintenance_staff' || s.departmentScope === 'campus' || s.userId === 'S301');
+            if (found) preferred = found.userId;
+          }
+          setSelectedStaff(preferred);
+        }
       });
     }
-  }, [isOpen]);
+  }, [isOpen, complaint]);
 
   if (!isOpen || !complaint) return null;
 
@@ -74,11 +88,18 @@ export default function AssignModal({ isOpen, onClose, complaint, onSuccess }) {
               value={selectedStaff}
               onChange={e => setSelectedStaff(e.target.value)}
             >
-              {staffList.map(s => (
-                <option key={s.userId} value={s.userId}>
-                  {s.fullName} ({s.role.replace('_', ' ')}), ID: {s.userId}
-                </option>
-              ))}
+              {staffList.map(s => {
+                const isMatch = (
+                  (complaint.category === 'mess' && (s.role === 'mess_incharge' || s.departmentScope === 'mess')) ||
+                  (complaint.category === 'hostel' && (s.role === 'warden' || s.departmentScope === 'hostel')) ||
+                  (complaint.category === 'campus' && (s.role === 'maintenance_staff' || s.departmentScope === 'campus'))
+                );
+                return (
+                  <option key={s.userId} value={s.userId}>
+                    {isMatch ? '⭐ (Recommended) ' : ''}{s.fullName} ({s.role.replace('_', ' ')}), ID: {s.userId}
+                  </option>
+                );
+              })}
             </select>
             <span className="form-help">Designated personnel will receive ticket notification</span>
           </div>

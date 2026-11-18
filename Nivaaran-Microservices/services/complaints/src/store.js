@@ -11,6 +11,48 @@ const _comments = new Map();
 
 let _nextSeq = 1001;
 
+async function syncFromDb() {
+  try {
+    if (await db.checkConnection()) {
+      const [rows] = await db.getPool().query('SELECT * FROM complaints ORDER BY created_at DESC');
+      for (const r of rows) {
+        if (!_complaints.has(r.complaint_id)) {
+          const complaint = new Complaint({
+            id: r.complaint_id,
+            trackingNumber: r.tracking_number,
+            reporterId: r.is_anonymous ? null : r.reporter_user_id,
+            categoryId: r.category_id,
+            locationId: r.location_id,
+            title: r.title,
+            description: r.description,
+            priority: r.priority,
+            status: r.current_status,
+            slaDeadline: r.sla_deadline ? new Date(r.sla_deadline).toISOString() : new Date().toISOString(),
+            isEscalated: Boolean(r.is_escalated),
+            escalationTier: r.escalation_tier,
+            escalationReason: r.escalation_reason,
+            version: r.version || 1,
+            idempotencyKey: r.idempotency_key,
+            createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString(),
+            updatedAt: r.updated_at ? new Date(r.updated_at).toISOString() : new Date().toISOString()
+          });
+          _complaints.set(r.complaint_id, complaint);
+          const seqMatch = r.complaint_id.match(/\d+$/);
+          if (seqMatch) {
+            const num = parseInt(seqMatch[0], 10);
+            if (num >= _nextSeq) _nextSeq = num + 1;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[COMPLAINTS] MySQL sync error:', err.message);
+  }
+}
+
+// Initial sync
+syncFromDb();
+
 function create({
   userId,
   categoryId,
@@ -73,8 +115,29 @@ function create({
   return complaint;
 }
 
-function find(id) {
-  return _complaints.get(id) || null;
+async function find(id) {
+  let c = _complaints.get(id);
+  if (!c) {
+    for (const comp of _complaints.values()) {
+      if (comp.trackingNumber === id || comp.id === id) {
+        c = comp;
+        break;
+      }
+    }
+  }
+  if (!c) {
+    await syncFromDb();
+    c = _complaints.get(id);
+    if (!c) {
+      for (const comp of _complaints.values()) {
+        if (comp.trackingNumber === id || comp.id === id) {
+          c = comp;
+          break;
+        }
+      }
+    }
+  }
+  return c || null;
 }
 
 function findByKey(key) {
@@ -84,24 +147,38 @@ function findByKey(key) {
   return _complaints.get(id) || null;
 }
 
-function list({ category, status } = {}) {
+async function list({ category, status, reporterUserId, priority } = {}) {
+  await syncFromDb();
   const results = [];
   for (const complaint of _complaints.values()) {
     if (category && complaint.categoryId !== category) continue;
     if (status && complaint.status !== status) continue;
+    if (priority && complaint.priority !== priority) continue;
+    if (reporterUserId && complaint.reporterId !== reporterUserId) continue;
     results.push(complaint);
   }
   return results;
 }
 
 function patch(id, changes) {
-  const complaint = _complaints.get(id);
+  let complaint = _complaints.get(id);
+  if (!complaint) {
+    for (const c of _complaints.values()) {
+      if (c.trackingNumber === id || c.id === id) {
+        complaint = c;
+        break;
+      }
+    }
+  }
   if (!complaint) return null;
 
   if (changes.title !== undefined) complaint.title = changes.title;
   if (changes.description !== undefined) complaint.description = changes.description;
   if (changes.priority !== undefined) complaint.priority = changes.priority;
   if (changes.status !== undefined) complaint.status = changes.status;
+  if (changes.assignedTo !== undefined) complaint.assignedTo = changes.assignedTo;
+  if (changes.assignedStaffId !== undefined) complaint.assignedTo = changes.assignedStaffId;
+  if (changes.assignedToName !== undefined) complaint.assignedToName = changes.assignedToName;
 
   complaint.version += 1;
   complaint.updatedAt = new Date().toISOString();
@@ -205,6 +282,47 @@ function getComments(complaintId) {
   return _comments.get(complaintId) || [];
 }
 
+async function addFeedback(complaintId, { rating, comment, reopen, studentUserId }) {
+  const complaint = await find(complaintId);
+  if (!complaint) return null;
+
+  complaint.feedback = {
+    rating: Number(rating) || 5,
+    comment: comment || '',
+    isReopened: Boolean(reopen),
+    studentUserId: studentUserId || complaint.reporterId,
+    createdAt: new Date().toISOString()
+  };
+
+  if (reopen) {
+    complaint.status = 'in_progress';
+  } else {
+    complaint.status = 'closed';
+  }
+  complaint.version += 1;
+  complaint.updatedAt = new Date().toISOString();
+
+  const feedbackId = `fb_${Date.now()}`;
+  db.checkConnection().then(connected => {
+    if (connected) {
+      const pool = db.getPool();
+      pool.query(
+        `INSERT INTO complaint_feedback (feedback_id, complaint_id, student_user_id, rating, comments, is_reopened, reopen_reason)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE rating=VALUES(rating), comments=VALUES(comments), is_reopened=VALUES(is_reopened)`,
+        [feedbackId, complaint.id, studentUserId || complaint.reporterId || 'student', Number(rating) || 5, comment || '', reopen ? 1 : 0, reopen ? comment : null]
+      ).catch(e => console.warn('[COMPLAINTS] feedback insert err:', e.message));
+
+      pool.query(
+        `UPDATE complaints SET current_status = ?, version = version + 1, etag = ?, updated_at = NOW() WHERE complaint_id = ?`,
+        [complaint.status, complaint.getETag(), complaint.id]
+      ).catch(e => console.warn('[COMPLAINTS] complaint status update err:', e.message));
+    }
+  }).catch(() => {});
+
+  return complaint;
+}
+
 function _clear() {
   _complaints.clear();
   _byKey.clear();
@@ -222,5 +340,6 @@ module.exports = {
   remove,
   addComment,
   getComments,
+  addFeedback,
   _clear
 };

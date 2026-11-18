@@ -88,6 +88,11 @@ function validatePatchComplaint(body) {
     errors.push({ field: 'status', msg: 'must be one of: submitted, assigned, in_progress, resolved, closed' });
   }
 
+  // assignedTo / assignedStaffId (optional)
+  if (body.assignedTo !== undefined && typeof body.assignedTo !== 'string') {
+    errors.push({ field: 'assignedTo', msg: 'must be a string user identifier' });
+  }
+
   return errors;
 }
 

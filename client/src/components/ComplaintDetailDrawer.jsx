@@ -4,7 +4,7 @@ import { api } from '../api/client';
 import StatusBadge from './StatusBadge';
 import PriorityBadge from './PriorityBadge';
 import Timeline from './Timeline';
-import { X, Send, AlertTriangle, PlayCircle, CheckCircle, Trash2, UserCheck, Clock, MapPin, Lock } from 'lucide-react';
+import { X, Send, AlertTriangle, PlayCircle, CheckCircle, Trash2, UserCheck, Clock, MapPin, Lock, ShieldCheck } from 'lucide-react';
 
 export default function ComplaintDetailDrawer({
   complaint,
@@ -154,13 +154,22 @@ export default function ComplaintDetailDrawer({
         {/* Action Dispatch Toolbar */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-hairline)', paddingBottom: '1.25rem' }}>
           {(isStaff || isAdmin) && complaint.status === 'assigned' && (
-            <button
-              className="btn btn-primary btn-sm"
-              disabled={actionLoading}
-              onClick={() => handleStatusChange('in_progress', 'Staff initiated physical inspection / repair works')}
-            >
-              <PlayCircle size={14} /> Start Resolution Work
-            </button>
+            <>
+              <button
+                className="btn btn-primary btn-sm"
+                disabled={actionLoading}
+                onClick={() => handleStatusChange('in_progress', 'Staff initiated physical inspection / repair works')}
+              >
+                <PlayCircle size={14} /> Start Resolution Work
+              </button>
+              <button
+                className="btn btn-success btn-sm"
+                disabled={actionLoading}
+                onClick={() => handleStatusChange('resolved', 'Work completed and verified by staff')}
+              >
+                <CheckCircle size={14} /> Mark as Resolved
+              </button>
+            </>
           )}
 
           {(isStaff || isAdmin) && complaint.status === 'in_progress' && (
@@ -182,6 +191,16 @@ export default function ComplaintDetailDrawer({
             </button>
           )}
 
+          {isAdmin && complaint.status === 'resolved' && (
+            <button
+              className="btn btn-primary btn-sm"
+              disabled={actionLoading}
+              onClick={() => handleStatusChange('closed', 'Administrative review completed and docket officially closed')}
+            >
+              <CheckCircle size={14} /> Admin Confirm & Close Docket
+            </button>
+          )}
+
           {isReporter && complaint.status === 'submitted' && (
             <button
               className="btn btn-danger btn-sm"
@@ -192,12 +211,12 @@ export default function ComplaintDetailDrawer({
             </button>
           )}
 
-          {isReporter && complaint.status === 'resolved' && (
+          {isReporter && (complaint.status === 'resolved' || complaint.status === 'closed') && (
             <button
               className="btn btn-success btn-sm"
               onClick={() => onOpenFeedback(complaint)}
             >
-              <CheckCircle size={14} /> Accept / Reopen Docket
+              <CheckCircle size={14} /> {complaint.feedback ? 'Update Review / Reopen' : '⭐ Submit Review & Feedback (Admin Only)'}
             </button>
           )}
 
@@ -235,13 +254,72 @@ export default function ComplaintDetailDrawer({
           </div>
         )}
 
-        {/* Existing Feedback Record */}
+        {/* Existing Feedback Record (Confidential to Admin) */}
         {complaint.feedback && (
-          <div className="alert-box alert-success" style={{ display: 'block', marginBottom: '1.5rem' }}>
-            <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#047857', marginBottom: '0.25rem' }}>
-              Student Rating: {'★'.repeat(complaint.feedback.rating)}{'☆'.repeat(5 - complaint.feedback.rating)}
-            </div>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-primary)' }}>"{complaint.feedback.comment}"</p>
+          <div style={{ marginBottom: '1.5rem' }}>
+            {isAdmin ? (
+              <div style={{
+                backgroundColor: '#F0FDF4',
+                border: '1px solid #86EFAC',
+                borderRadius: 'var(--radius-global)',
+                padding: '1rem',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#166534', fontWeight: 700, fontSize: '0.875rem' }}>
+                    <ShieldCheck size={16} />
+                    <span>Confidential Student Review (Admin View Only)</span>
+                  </div>
+                  <div style={{ color: '#D97706', fontSize: '1.1rem', letterSpacing: '2px' }}>
+                    {'★'.repeat(complaint.feedback.rating)}{'☆'.repeat(5 - complaint.feedback.rating)}
+                    <span style={{ fontSize: '0.8125rem', color: '#15803D', fontWeight: 600, marginLeft: '6px' }}>
+                      ({complaint.feedback.rating}/5)
+                    </span>
+                  </div>
+                </div>
+                <p style={{ fontSize: '0.875rem', color: '#14532D', fontStyle: 'italic', lineHeight: 1.5, margin: '0.4rem 0' }}>
+                  "{complaint.feedback.comment}"
+                </p>
+                <div style={{ fontSize: '0.75rem', color: '#15803D', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #BBF7D0', paddingTop: '0.4rem', marginTop: '0.4rem' }}>
+                  <span>Reporter Roll Number: <code style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{complaint.reporterUserId || complaint.reporterId}</code></span>
+                  <span>Recorded: {new Date(complaint.feedback.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              </div>
+            ) : isReporter ? (
+              <div style={{
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #CBD5E1',
+                borderRadius: 'var(--radius-global)',
+                padding: '0.875rem'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--text-primary)' }}>
+                    Your Submitted Review (Confidential to Admin)
+                  </span>
+                  <span style={{ color: '#D97706', letterSpacing: '1px' }}>
+                    {'★'.repeat(complaint.feedback.rating)}{'☆'.repeat(5 - complaint.feedback.rating)}
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                  "{complaint.feedback.comment}"
+                </p>
+              </div>
+            ) : (
+              <div style={{
+                backgroundColor: '#F1F5F9',
+                border: '1px solid #E2E8F0',
+                borderRadius: 'var(--radius-global)',
+                padding: '0.65rem 0.85rem',
+                fontSize: '0.78125rem',
+                color: '#475569',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}>
+                <Lock size={13} style={{ color: '#0F766E' }} />
+                <span>Student review submitted directly to Campus Administration (Confidential).</span>
+              </div>
+            )}
           </div>
         )}
 

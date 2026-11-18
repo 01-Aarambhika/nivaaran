@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import PriorityBadge from '../components/PriorityBadge';
-import { Users, AlertTriangle, FileText, CheckCircle2, UserPlus, Clock, ChevronRight, RefreshCw, Search, Shield, Lock } from 'lucide-react';
+import { Users, AlertTriangle, FileText, CheckCircle2, UserPlus, Clock, ChevronRight, RefreshCw, Search, Shield, Lock, Star, ShieldCheck } from 'lucide-react';
 
 export default function AdminDashboard({
   onSelectComplaint,
@@ -34,8 +34,8 @@ export default function AdminDashboard({
   const [staffError, setStaffError] = useState('');
   const [creatingStaff, setCreatingStaff] = useState(false);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const [cmps, audits, slas, staff] = await Promise.all([
         api.getComplaints(user.token),
@@ -48,12 +48,15 @@ export default function AdminDashboard({
       setSlaSnapshots(slas);
       setStaffList(staff);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(true);
+    // Real-time polling every 3s
+    const interval = setInterval(() => loadData(false), 3000);
+    return () => clearInterval(interval);
   }, [user, refreshTrigger]);
 
   const handleCreateStaff = async (e) => {
@@ -179,6 +182,9 @@ export default function AdminDashboard({
         <button className={`tab-btn ${currentTab === 'audit' ? 'active' : ''}`} onClick={() => setCurrentTab('audit')}>
           Audit Trail Log ({auditEvents.length})
         </button>
+        <button className={`tab-btn ${currentTab === 'feedback' ? 'active' : ''}`} onClick={() => setCurrentTab('feedback')}>
+          ⭐ Student Reviews ({complaints.filter(c => c.feedback).length})
+        </button>
       </div>
 
       {/* ── TAB 1: ALL COMPLAINTS ────────────────────────────────────────── */}
@@ -263,12 +269,12 @@ export default function AdminDashboard({
                     </div>
 
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      {c.status === 'submitted' && (
+                      {['submitted', 'assigned'].includes(c.status) && (
                         <button
                           className="btn btn-primary btn-sm"
                           onClick={(e) => { e.stopPropagation(); onOpenAssign(c); }}
                         >
-                          Dispatch Staff
+                          {c.status === 'assigned' ? 'Reassign Staff' : 'Dispatch Staff'}
                         </button>
                       )}
                       <button className="btn btn-secondary btn-sm">
@@ -510,6 +516,77 @@ export default function AdminDashboard({
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* ── TAB 5: STUDENT REVIEWS & FEEDBACK (ADMIN ONLY) ───────────── */}
+      {currentTab === 'feedback' && (
+        <div>
+          <div style={{ marginBottom: '1.25rem' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Student Quality Sign-Off & Reviews (Admin Access)</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem', marginTop: '0.2rem' }}>
+              Direct confidential feedback submitted by students upon resolution. Visible only to campus administration for quality audit.
+            </p>
+          </div>
+
+          {complaints.filter(c => c.feedback).length === 0 ? (
+            <div className="card empty-state" style={{ padding: '2.5rem' }}>
+              <Star size={32} style={{ color: 'var(--text-secondary)', margin: '0 auto 0.75rem auto' }} />
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem' }}>
+                No student reviews recorded yet. Reviews appear automatically when students confirm resolution.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1rem' }}>
+              {complaints.filter(c => c.feedback).map(c => (
+                <div
+                  key={c.id}
+                  className="card"
+                  style={{
+                    padding: '1.25rem',
+                    border: '1px solid #86EFAC',
+                    backgroundColor: '#F0FDF4',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between'
+                  }}
+                  onClick={() => onSelectComplaint(c)}
+                >
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.8125rem', color: '#166534' }}>
+                        {c.trackingNumber || c.id}
+                      </span>
+                      <div style={{ color: '#D97706', letterSpacing: '2px', fontSize: '0.95rem' }}>
+                        {'★'.repeat(c.feedback.rating)}{'☆'.repeat(5 - c.feedback.rating)}
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#15803D', marginLeft: '4px' }}>
+                          ({c.feedback.rating}/5)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: '#14532D', marginBottom: '0.5rem' }}>
+                      {c.title}
+                    </div>
+
+                    <div style={{ backgroundColor: '#FFFFFF', padding: '0.75rem', borderRadius: '4px', border: '1px solid #BBF7D0', marginBottom: '0.75rem' }}>
+                      <p style={{ fontSize: '0.8125rem', color: '#14532D', fontStyle: 'italic', lineHeight: 1.45 }}>
+                        "{c.feedback.comment}"
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: '#15803D', borderTop: '1px solid #BBF7D0', paddingTop: '0.5rem' }}>
+                    <span>Reporter: <code>{c.reporterUserId || c.reporterId}</code></span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: 600 }}>
+                      Inspect Docket <ChevronRight size={13} />
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

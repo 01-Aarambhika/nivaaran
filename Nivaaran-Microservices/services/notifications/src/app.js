@@ -101,11 +101,16 @@ app.post('/notifications', (req, res, next) => {
   }
 });
 
-// ── GET /notifications — List notifications (admin only) ──────────────────────
-app.get('/notifications', requireAuth, requireAdmin, (req, res, next) => {
+// ── GET /notifications — List notifications (self or admin) ───────────────────
+app.get('/notifications', requireAuth, (req, res, next) => {
   try {
     const { recipientUserId, status, channel } = req.query;
-    const items = store.list({ recipientUserId, status, channel });
+    // Allow users to read their own notifications, or admin to read all/any
+    let targetUser = recipientUserId;
+    if (req.user.role !== 'admin') {
+      targetUser = req.user.userId;
+    }
+    const items = store.list({ recipientUserId: targetUser, status, channel });
     res.set('Cache-Control', 'max-age=30, private');
     return res.sendNegotiated(items, 200);
   } catch (err) {

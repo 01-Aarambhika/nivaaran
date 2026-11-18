@@ -1,8 +1,9 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { LogOut, User, Plus } from 'lucide-react';
+import NotificationBell from './NotificationBell';
 
-export default function Navbar({ onOpenNewComplaint }) {
+export default function Navbar({ onOpenNewComplaint, onSelectComplaint }) {
   const { user, logout, quickLogin } = useAuth();
 
   const getRoleLabel = (role) => {
@@ -42,6 +43,8 @@ export default function Navbar({ onOpenNewComplaint }) {
                 {getRoleLabel(user.role)}
               </span>
             </div>
+
+            <NotificationBell onSelectComplaint={onSelectComplaint} />
 
             {/* Institutional Role Switcher for Demonstration / Verification */}
             <div style={{ display: 'flex', gap: '0.25rem', borderLeft: '1px solid var(--border-hairline)', paddingLeft: '0.75rem', marginLeft: '0.25rem' }}>

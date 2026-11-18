@@ -33,6 +33,12 @@ function requireAuth(req, res, next) {
 
   // Attach token payload to request
   req.userToken = parts[1];
+  try {
+    const payloadBase64 = parts[1].split('.')[1];
+    if (payloadBase64) {
+      req.user = JSON.parse(Buffer.from(payloadBase64, 'base64url').toString('utf8'));
+    }
+  } catch {}
   next();
 }
 

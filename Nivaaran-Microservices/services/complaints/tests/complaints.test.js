@@ -109,7 +109,7 @@ describe('Nivaaran Complaints Service Test Suite (A4, A5, A6)', () => {
 
     assert.equal(d1.id, d2.id);
     assert.equal(d1.trackingNumber, d2.trackingNumber);
-    assert.equal(store.list().length, 1);
+    assert.equal((await store.list()).length, 1);
   });
 
   // 3. Authorization guard (401)
